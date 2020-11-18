@@ -4,7 +4,7 @@ Description: workshop bastion infra
 Parameters:
   AmiId:
     Type: String
-    Default: ami-096ae51b852a0c415
+    Default: ami-0e5a73b2d14bfa2ef
   VpcCidr:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
