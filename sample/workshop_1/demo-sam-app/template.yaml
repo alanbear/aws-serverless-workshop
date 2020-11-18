@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  Demo SAM Template for sam-app
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  DemoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: demo/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          dynamodb_table: replace_value
+          s3_bucket: replace_value
+
+  DynamoDBTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub ${AWS::StackName}-table
+
+  StoreS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-store-bucket
+
+  ## Lambda Role
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-lambda-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-S3-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: S3
+                Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:GetObject
+                Resource: !Sub ${StoreS3Bucket.Arn}/*
+        - PolicyName: !Sub "${AWS::StackName}-Dynamodb-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Dynamodb
+                Effect: Allow
+                Action:
+                  - "dynamodb:Get*"
+                  - "dynamodb:Put*"
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:Update*"
+                  - "dynamodb:List*"
+                  - "dynamodb:Describe*"
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTable}"
+Outputs:
+  StoreS3BucketName:
+    Value: !Ref StoreS3Bucket
+  DynamoDBTableName:
+    Value: !Ref DynamoDBTable

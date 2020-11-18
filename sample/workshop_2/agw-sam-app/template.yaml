@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  agw-sam-app
+
+  Sample SAM Template for agw-sam-app
+
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: python3.8
+    Handler: app.lambda_handler
+
+Resources:
+  PostFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: post_function/
+      Role: !GetAtt FunctionRole.Arn
+  GetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: get_function/
+      Role: !GetAtt FunctionRole.Arn
+  ApiGatewaySampleTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub ${AWS::StackName}-table
+  
+  ## Lambda Role
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-lambda-role
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action: "sts:AssumeRole"
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-Dynamodb-Policy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: Dynamodb
+                Effect: Allow
+                Action:
+                  - "dynamodb:Get*"
+                  - "dynamodb:Put*"
+                  - "dynamodb:Scan"
+                  - "dynamodb:Query"
+                  - "dynamodb:Update*"
+                  - "dynamodb:List*"
+                  - "dynamodb:Describe*"
+                Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ApiGatewaySampleTable}"

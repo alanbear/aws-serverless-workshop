@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'lambda-edge-sam-app
+
+  Sample SAM Template for lambda-edge-sam-app
+
+  '
+Globals:
+  Function:
+    Timeout: 3
+    Runtime: python3.8
+    Handler: app.lambda_handler
+Resources:
+  CheckJwtFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://alanbear-lambda-edge-bucket/edbe496e72df41b4cd33afb1c3412325
+      Role:
+        Fn::GetAtt:
+        - FunctionRole
+        - Arn
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${AWS::StackName}-lambda-role
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - edgelambda.amazonaws.com
