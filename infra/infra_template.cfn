@@ -29,7 +29,7 @@ Resources:
           SubnetId: !Ref PublicSubnet
       Tags:
         - Key: Name
-          Value: !Sub ${AWS::StackName}-SSM-bastion
+          Value: !Sub ${AWS::StackName}-ssm-bastion
 
   Ec2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -56,7 +56,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:*
-                Resource: !GetAtt S3Bucket.Arn
+                Resource: !GetAtt CloudformationS3Bucket.Arn
         - PolicyName: cloudformation-inline-policy
           PolicyDocument:
             Version: 2012-10-17
