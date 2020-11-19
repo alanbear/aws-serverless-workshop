@@ -56,7 +56,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:*
-                Resource: !GetAtt CloudformationS3Bucket.Arn
+                Resource: *
         - PolicyName: cloudformation-inline-policy
           PolicyDocument:
             Version: 2012-10-17
