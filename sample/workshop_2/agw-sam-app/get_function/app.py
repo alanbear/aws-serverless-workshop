@@ -1,8 +1,9 @@
 import json
 import boto3
+import os
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('alanbear-agw-sample-table')
+table = dynamodb.Table(os.environ['dynamodb_table'])
 
 def lambda_handler(event, context):
 

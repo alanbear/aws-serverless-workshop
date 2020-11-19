@@ -58,3 +58,7 @@ Resources:
                   - "dynamodb:List*"
                   - "dynamodb:Describe*"
                 Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ApiGatewaySampleTable}"
+
+Outputs:
+  DynamoDBTableName:
+    Value: !Ref ApiGatewaySampleTable
