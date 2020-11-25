@@ -7,7 +7,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
     Runtime: python3.8
     Handler: app.lambda_handler
 
@@ -17,11 +17,19 @@ Resources:
     Properties:
       CodeUri: post_function/
       Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          dynamodb_table: replace_value
+
   GetFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: get_function/
       Role: !GetAtt FunctionRole.Arn
+      Environment:
+        Variables:
+          dynamodb_table: replace_value
+
   ApiGatewaySampleTable:
     Type: AWS::Serverless::SimpleTable
     Properties:

@@ -9,33 +9,41 @@ Parameters:
     Description: Please enter the IP range (CIDR notation) for this VPC
     Type: String
     Default: 10.192.0.0/16
-  PublicSubnetCidr:
-    Description: Please enter the IP range (CIDR notation) for the public subnet in the first Availability Zone
-    Type: String
-    Default: 10.192.10.0/24
 
 Resources:
-  Ec2InPublicSubnet:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId: !Ref AmiId
-      InstanceType: t2.nano
-      IamInstanceProfile: !Ref Ec2InstanceProfile
-      NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: 0
-          GroupSet:
-            - !Ref NoIngressSecurityGroup
-          SubnetId: !Ref PublicSubnet
-      Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-ssm-bastion
-
   Ec2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles: [!Ref Ec2InstanceRole]
+
+  Ec2LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${AWS::StackName}-LaunchTemplate
+      LaunchTemplateData:
+        InstanceType: t3.micro
+        ImageId: !Ref AmiId
+        IamInstanceProfile:
+          Arn: !GetAtt Ec2InstanceProfile.Arn
+        NetworkInterfaces: 
+          - Groups:
+            - !Ref NoIngressSecurityGroup
+            SubnetId: !Ref PublicSubnet
+            DeviceIndex: 0
+
+  BastionServerAsg:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      DesiredCapacity: 0
+      MaxSize: 0
+      MinSize: 0
+      LaunchTemplate:
+        LaunchTemplateId: !Ref Ec2LaunchTemplate
+        Version: !GetAtt Ec2LaunchTemplate.LatestVersionNumber
+      VPCZoneIdentifier:
+        - Ref: PublicSubnet
+
   Ec2InstanceRole:
     Type: AWS::IAM::Role
     Properties:
@@ -56,7 +64,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:*
-                Resource: *
+                Resource: "*"
         - PolicyName: cloudformation-inline-policy
           PolicyDocument:
             Version: 2012-10-17
@@ -108,7 +116,7 @@ Resources:
     Properties:
       VpcId: !Ref Vpc
       AvailabilityZone: !Select [0, !GetAZs ""]
-      CidrBlock: !Ref PublicSubnetCidr
+      CidrBlock: !Ref VpcCidr
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
@@ -142,3 +150,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub ${AWS::StackName}-cfn-s3-bucket
+
+Outputs:
+  CloudformationS3BucketName:
+    Value: !Ref CloudformationS3Bucket
